@@ -10,19 +10,38 @@ echo.
 
 where py >nul 2>nul
 if errorlevel 1 (
-    echo Python was not found.
-    echo Install Python 3.11 from python.org, then run this file again.
-    echo Make sure "Add Python to PATH" is enabled during installation.
+    echo Python is not installed.
+    echo Install Python 3.12 and then double-click this file again.
+    echo.
     pause
     exit /b 1
 )
 
+set "PYTHON_CMD="
+py -3.12 -V >nul 2>&1 && set "PYTHON_CMD=py -3.12"
+if not defined PYTHON_CMD py -3.13 -V >nul 2>&1 && set "PYTHON_CMD=py -3.13"
+if not defined PYTHON_CMD py -3.11 -V >nul 2>&1 && set "PYTHON_CMD=py -3.11"
+if not defined PYTHON_CMD py -3.10 -V >nul 2>&1 && set "PYTHON_CMD=py -3.10"
+if not defined PYTHON_CMD py -3.14 -V >nul 2>&1 && set "PYTHON_CMD=py -3.14"
+
+if not defined PYTHON_CMD (
+    echo No supported Python version was found.
+    echo Supported versions: 3.10, 3.11, 3.12, 3.13, or 3.14.
+    echo.
+    echo Install Python 3.12, then run this file again.
+    echo.
+    pause
+    exit /b 1
+)
+
+echo Using %PYTHON_CMD%
+echo.
+
 if not exist ".venv\Scripts\python.exe" (
     echo [1/3] Creating the Python environment...
-    py -3.11 -m venv .venv
+    %PYTHON_CMD% -m venv .venv
     if errorlevel 1 (
         echo Could not create the environment.
-        echo Make sure Python 3.11 is installed.
         pause
         exit /b 1
     )
@@ -34,6 +53,7 @@ echo [2/3] Installing/checking dependencies...
 if errorlevel 1 (
     echo.
     echo Dependency installation failed.
+    echo.
     pause
     exit /b 1
 )
@@ -42,7 +62,6 @@ echo.
 echo [3/3] Starting Voice Cloner...
 echo.
 echo Keep this window open while using the app.
-echo Your browser should open automatically.
 echo.
 
 ".venv\Scripts\python.exe" app.py
